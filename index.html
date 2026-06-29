@@ -85,7 +85,7 @@
             transition: opacity 0.3s ease;
         }
 
-        /* --- RULETKA (ZMIENIONA) --- */
+        /* --- RULETKA --- */
         #ruletka-kontener {
             display: none;
             width: 100%;
@@ -124,7 +124,7 @@
         .ruletka-item {
             height: 40px;
             box-sizing: border-box;
-            border-bottom: 2px solid #2c3e50; /* Odstęp między blokami koloru */
+            border-bottom: 2px solid #2c3e50;
         }
 
         /* --- KOLORY RZADKOŚCI TEKSTU --- */
@@ -160,7 +160,7 @@
         .bg-epicka { background-color: #9b59b6; }
         .bg-rzadka { background-color: #3498db; }
         .bg-niepospolita { background-color: #2ecc71; }
-        .bg-zwykla { background-color: #bdc3c7; } /* Lekko ciemniejszy szary żeby odcinał się od tła */
+        .bg-zwykla { background-color: #bdc3c7; }
 
         /* Sekcja katalogu */
         #katalog-kontener {
@@ -342,16 +342,14 @@
             tier.style.opacity = 0;
             ruletkaKontener.style.display = "block"; 
             
-            // 1. Wylosowanie właściwego dropu
             const drop = wylosujDrop();
             
-            // 2. Budowanie znacznie dłuższej taśmy dla 20-sekundowej animacji
             pasek.style.transition = "none";
             pasek.style.transform = "translateY(0)";
             pasek.innerHTML = "";
             
-            const iloscElementow = 220; // Więcej klocków, żeby na początku szybko śmigały
-            const docelowyIndeks = 210; // Zatrzymuje się pod sam koniec
+            const iloscElementow = 110; 
+            const docelowyIndeks = 100; 
             
             for(let i = 0; i < iloscElementow; i++) {
                 let div = document.createElement('div');
@@ -359,27 +357,23 @@
                 
                 let daneItemu = (i === docelowyIndeks) ? drop : wylosujDrop();
                 
-                // Dodajemy tylko klasę z prefiksem 'bg-', bez wpisywania tekstu do środka
                 div.classList.add('bg-' + daneItemu.klasa);
                 pasek.appendChild(div);
             }
             
-            // 3. Rozpoczęcie animacji (wymuszenie reflow dla CSS)
             void pasek.offsetWidth;
             
             const przesuniecie = -(docelowyIndeks * 40 - 40);
             
-            // Bardzo długa animacja zwalniająca (20 sekund)
-            pasek.style.transition = "transform 20s cubic-bezier(0.1, 0.85, 0.1, 1)";
+            // Animacja skrócona do 10 sekund
+            pasek.style.transition = "transform 10s cubic-bezier(0.1, 0.85, 0.1, 1)";
             pasek.style.transform = `translateY(${przesuniecie}px)`;
             
-            // Czekamy 20.5 sekundy (20 sekund animacji + pół sekundy dla efektu budowania napięcia)
-            await czekaj(20500);
+            // Czekamy 10.5 sekundy (10 sekund kręcenia + pół sekundy dla efektu)
+            await czekaj(10500);
             
-            // Ukrywamy ruletkę i pokazujemy gotowy tekst z wynikiem
             ruletkaKontener.style.display = "none";
             
-            // Zapis do Ekwipunku
             ekwipunek[drop.postac] = (ekwipunek[drop.postac] || 0) + 1;
             zapiszEkwipunek(); generujKatalog();
             

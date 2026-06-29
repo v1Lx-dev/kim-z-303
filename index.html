@@ -66,6 +66,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            width: 100%;
         }
 
         #wynik {
@@ -84,12 +85,51 @@
             transition: opacity 0.3s ease;
         }
 
-        .odliczanie {
-            color: #ecf0f1 !important;
-            font-size: 40px !important;
-            background: none !important;
-            -webkit-text-fill-color: #ecf0f1 !important;
-            text-shadow: none !important;
+        /* --- RULETKA (NOWA SEKCJA) --- */
+        #ruletka-kontener {
+            display: none;
+            width: 100%;
+            max-width: 600px;
+            height: 120px; /* Wysokość na ok. 3 elementy */
+            overflow: hidden;
+            position: relative;
+            background-color: #1a252f;
+            border: 2px solid #34495e;
+            border-radius: 10px;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.8);
+            margin-bottom: 20px;
+        }
+        #ruletka-kursor {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 40px;
+            margin-top: -20px; /* Środek */
+            border-top: 2px solid #e74c3c;
+            border-bottom: 2px solid #e74c3c;
+            background: rgba(231, 76, 60, 0.15);
+            z-index: 2;
+            pointer-events: none;
+            box-shadow: 0 0 10px rgba(231,76,60,0.4);
+        }
+        #ruletka-pasek {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        .ruletka-item {
+            height: 40px;
+            line-height: 40px;
+            font-size: 20px;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding: 0 10px;
         }
 
         /* --- KOLORY RZADKOŚCI --- */
@@ -131,7 +171,7 @@
         .postac { padding: 8px 10px; font-size: 16px; display: flex; justify-content: space-between; }
         .ilosc { color: #ecf0f1; font-size: 14px; background: rgba(0,0,0,0.2); padding: 2px 8px; border-radius: 10px; }
 
-        /* MENU KONTRAKTÓW (Teraz na dole) */
+        /* MENU KONTRAKTÓW */
         #wymiana-sekcja {
             margin-top: 30px; padding: 15px; background-color: #2c3e50; border-radius: 8px; border: 1px solid #1a252f;
         }
@@ -182,6 +222,11 @@
     <button id="przycisk" class="glowny" onclick="losuj()">Jakim mieszkańcem osiedla Dywizjonu 303 jesteś dziś?</button>
     
     <div id="wynik-kontener">
+        <div id="ruletka-kontener">
+            <div id="ruletka-kursor"></div>
+            <div id="ruletka-pasek"></div>
+        </div>
+
         <div id="wynik"></div>
         <div id="wylosowany-tier"></div>
     </div>
@@ -193,10 +238,8 @@
         
         <div id="katalog-lista"></div>
         
-        <!-- Wymiana na dole, zgodnie z życzeniem -->
         <div id="wymiana-sekcja"></div>
         
-        <!-- Interaktywny Kreator (ukryty do momentu kliknięcia) -->
         <div id="kreator-kontraktu">
             <div id="kreator-naglowek"></div>
             <div id="kreator-podtytul">Kliknij w karty poniżej, aby wrzucić je do kontraktu.</div>
@@ -222,8 +265,6 @@
         ];
 
         let ekwipunek = {};
-        
-        // Zmienne do kontroli kreatora
         let wybraneDoKontraktu = [];
         let aktywnyKontraktTIndex = -1;
 
@@ -261,6 +302,7 @@
             
             przycisk.disabled = true; przycisk.innerText = "Już dziś losowałeś! Wróć jutro.";
             wynik.className = klasaCSS; wynik.innerText = postac;
+            wynik.style.display = "block"; // Upewniamy się, że wynik wraca po animacji ruletki
             
             if(nazwaTieru) {
                 tier.innerText = `[ Rzadkość: ${nazwaTieru} ]`; tier.className = klasaCSS; tier.style.opacity = 1;
@@ -285,15 +327,63 @@
             const przycisk = document.getElementById('przycisk');
             const wynik = document.getElementById('wynik');
             const tier = document.getElementById('wylosowany-tier');
+            const ruletkaKontener = document.getElementById('ruletka-kontener');
+            const pasek = document.getElementById('ruletka-pasek');
             
-            przycisk.disabled = true; wynik.className = "odliczanie"; tier.style.opacity = 0;
+            przycisk.disabled = true; 
+            wynik.style.display = "none"; 
+            tier.style.opacity = 0;
+            ruletkaKontener.style.display = "block"; // Pokazujemy ruletkę
             
-            wynik.innerText = "3..."; await czekaj(800);
-            wynik.innerText = "2..."; await czekaj(800);
-            wynik.innerText = "1..."; await czekaj(800);
-            
+            // 1. Wylosowanie właściwego dropu
             const drop = wylosujDrop();
             
+            // 2. Budowanie paska losowania (45 elementów żeby długo się kręciło)
+            pasek.style.transition = "none";
+            pasek.style.transform = "translateY(0)";
+            pasek.innerHTML = "";
+            
+            const iloscElementow = 45;
+            const docelowyIndeks = 40; // Zwycięska postać zatrzyma się na tym indeksie
+            
+            for(let i = 0; i < iloscElementow; i++) {
+                let div = document.createElement('div');
+                div.className = 'ruletka-item';
+                
+                let daneItemu;
+                if(i === docelowyIndeks) {
+                    // Wrzucamy nasz właściwy wynik
+                    daneItemu = drop;
+                } else {
+                    // Losujemy inne postacie na tło maszyny losującej
+                    let losowyTier = bazaPostaci[Math.floor(Math.random() * bazaPostaci.length)];
+                    let losowaPostac = losowyTier.postaci[Math.floor(Math.random() * losowyTier.postaci.length)];
+                    daneItemu = { postac: losowaPostac, klasa: losowyTier.klasa };
+                }
+                
+                div.innerText = daneItemu.postac;
+                div.classList.add(daneItemu.klasa);
+                pasek.appendChild(div);
+            }
+            
+            // 3. Rozpoczęcie animacji (wymuszenie reflow dla CSS)
+            void pasek.offsetWidth;
+            
+            // Matematyka: Wysokość elementu to 40px. Środek kontenera zaczyna się na 40px (ze 120px całej ramki).
+            // Musimy przesunąć pasek tak, by wylosowany item wskoczył w środek.
+            const przesuniecie = -(docelowyIndeks * 40 - 40);
+            
+            // Płynna animacja zwalniająca na końcu
+            pasek.style.transition = "transform 4s cubic-bezier(0.1, 0.85, 0.1, 1)";
+            pasek.style.transform = `translateY(${przesuniecie}px)`;
+            
+            // Czekamy aż animacja się skończy + pół sekundy dla efektu
+            await czekaj(4500);
+            
+            // Ukrywamy ruletkę i pokazujemy gotowy złoty tekst
+            ruletkaKontener.style.display = "none";
+            
+            // Zapis do EQ
             ekwipunek[drop.postac] = (ekwipunek[drop.postac] || 0) + 1;
             zapiszEkwipunek(); generujKatalog();
             
@@ -315,17 +405,15 @@
             const kontener = document.getElementById('katalog-kontener');
             if (kontener.style.display === "none" || kontener.style.display === "") {
                 kontener.style.display = "block";
-                zamknijKreator(); // Resetuje widok do podstawowego
+                zamknijKreator();
             } else {
                 kontener.style.display = "none";
             }
         }
 
-        // --- SYSTEM KREATORA KONTRAKTÓW ---
-
         function otworzKreator(indexZrodlowy) {
             aktywnyKontraktTIndex = indexZrodlowy;
-            wybraneDoKontraktu = []; // Wyczyść wybór
+            wybraneDoKontraktu = [];
             
             document.getElementById('katalog-lista').style.display = "none";
             document.getElementById('wymiana-sekcja').style.display = "none";
@@ -346,7 +434,6 @@
         }
 
         function dodajDoSlota(postac) {
-            // Sprawdzamy czy mamy miejsce i czy mamy wystarczająco sztuk tej karty
             if (wybraneDoKontraktu.length < 5) {
                 let uzyteSztuki = wybraneDoKontraktu.filter(x => x === postac).length;
                 let posiadaneSztuki = ekwipunek[postac] || 0;
@@ -371,7 +458,6 @@
             
             document.getElementById('kreator-naglowek').innerHTML = `KREATOR: <span class="${katZrodlowa.klasa}">${katZrodlowa.nazwa}</span> ➔ <span class="${katDocelowa.klasa}">${katDocelowa.nazwa}</span>`;
             
-            // Rysowanie 5 slotów
             const slotyKontener = document.getElementById('kreator-sloty');
             slotyKontener.innerHTML = "";
             for (let i = 0; i < 5; i++) {
@@ -388,7 +474,6 @@
                 slotyKontener.appendChild(slot);
             }
             
-            // Rysowanie listy kart do kliknięcia
             const kartyLista = document.getElementById('kreator-karty-lista');
             kartyLista.innerHTML = "";
             
@@ -410,7 +495,6 @@
                 }
             });
             
-            // Przycisk zatwierdź
             document.getElementById('btn-zatwierdz').disabled = wybraneDoKontraktu.length !== 5;
         }
 
@@ -419,25 +503,18 @@
             
             let katDocelowa = bazaPostaci[aktywnyKontraktTIndex - 1];
             
-            // Usuń z ekwipunku wybrane karty
             wybraneDoKontraktu.forEach(postac => {
                 ekwipunek[postac]--;
-                if (ekwipunek[postac] <= 0) {
-                    delete ekwipunek[postac];
-                }
+                if (ekwipunek[postac] <= 0) { delete ekwipunek[postac]; }
             });
             
-            // Wylosuj nagrodę
             let nowaPostac = katDocelowa.postaci[Math.floor(Math.random() * katDocelowa.postaci.length)];
             ekwipunek[nowaPostac] = (ekwipunek[nowaPostac] || 0) + 1;
             
             zapiszEkwipunek();
             alert(`🎉 KONTRAKT ZATWIERDZONY!\n\nWylosowano nowy, wyższy tier:\n⭐ ${nowaPostac} [${katDocelowa.nazwa}]`);
-            
-            zamknijKreator(); // Cofa widok i generuje odświeżony katalog
+            zamknijKreator();
         }
-
-        // --- GŁÓWNE GENEROWANIE WIDOKÓW ---
 
         function generujKatalog() {
             const lista = document.getElementById('katalog-lista');
@@ -451,10 +528,9 @@
             
             statystyki.innerText = `Odkryte postaci: ${zdobyteUnikalne} / ${wszystkieUnikalne}`;
 
-            // --- GENEROWANIE MENU KONTRAKTÓW ---
             sekcjaWymiany.innerHTML = '<div class="wymiana-tytul">🔄 Menu Kontraktów (Wymiana 5 ➔ 1)</div>';
             
-            for(let i = 5; i >= 1; i--) { // Od Zwykłej [5] do Legendarnej [1]
+            for(let i = 5; i >= 1; i--) {
                 let katZrodlowa = bazaPostaci[i];
                 let katDocelowa = bazaPostaci[i-1];
                 let posiadaneSztuki = policzZasobyKategorii(katZrodlowa);
@@ -480,7 +556,6 @@
                 sekcjaWymiany.appendChild(rzad);
             }
 
-            // --- GENEROWANIE LISTY POSTACI ---
             bazaPostaci.forEach(kategoria => {
                 const naglowek = document.createElement('div');
                 naglowek.className = `kategoria-tytul ${kategoria.klasa}`;

@@ -126,7 +126,6 @@
             color: #ecf0f1; /* Biały/Szary */
         }
 
-        /* Klasa zablokowanej karty (nadpisuje kolory) */
         .zablokowana {
             color: #7f8c8d !important;
             font-style: italic;
@@ -175,6 +174,49 @@
             padding: 2px 8px;
             border-radius: 10px;
         }
+
+        /* SYSTEM WYMIANY */
+        #wymiana-sekcja {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #2c3e50;
+            border-radius: 8px;
+            border: 1px solid #1a252f;
+        }
+        .wymiana-tytul {
+            text-align: center;
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #e67e22;
+        }
+        .wymiana-rzad {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #34495e;
+            font-size: 15px;
+        }
+        .wymiana-rzad:last-child { border-bottom: none; padding-bottom: 0; }
+        .wymiana-btn {
+            padding: 8px 12px;
+            background-color: #e67e22;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        .wymiana-btn:disabled {
+            background-color: #7f8c8d;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        .wymiana-btn:hover:not(:disabled) {
+            background-color: #d35400;
+        }
     </style>
 </head>
 <body>
@@ -190,11 +232,11 @@
 
     <div id="katalog-kontener">
         <div id="katalog-statystyki"></div>
+        <div id="wymiana-sekcja"></div>
         <div id="katalog-lista"></div>
     </div>
 
     <script>
-        // Baza z tierami i odpowiednimi szansami
         const bazaPostaci = [
             {
                 nazwa: "Mityczna", szansa: 0.5, klasa: "mityczna",
@@ -244,21 +286,19 @@
             }
         ];
 
-        let ekwipunek = {}; // Format: { "Nazwa postaci": 2 }
+        let ekwipunek = {};
         
-        // Funkcja bezpiecznie pobierająca dane, która NIE KASUJE starego katalogu (tzw. migracja)
         function zaladujEkwipunek() {
             const zapis = localStorage.getItem('odblokowanePostaci');
             if (zapis) {
                 const zdekodowane = JSON.parse(zapis);
-                // Jeśli dane to stara tablica (Array) ze starymi "dropami" (np. ["Bronek z jabłkami", ...])
                 if (Array.isArray(zdekodowane)) {
                     zdekodowane.forEach(postac => {
-                        ekwipunek[postac] = 1; // Dajemy im 1 sztukę za stary drop
+                        ekwipunek[postac] = 1;
                     });
-                    zapiszEkwipunek(); // Aktualizujemy w pamięci do nowego, słownikowego formatu
+                    zapiszEkwipunek();
                 } else {
-                    ekwipunek = zdekodowane; // Pobieramy nowy, poprawny format
+                    ekwipunek = zdekodowane;
                 }
             }
         }
@@ -305,15 +345,13 @@
             }
         }
 
-        // Algorytm losujący postać na podstawie ustalonych procentowych szans
         function wylosujDrop() {
-            const roll = Math.random() * 100; // Liczba od 0 do 100
+            const roll = Math.random() * 100;
             let skumulowanaSzansa = 0;
 
             for (let kategoria of bazaPostaci) {
                 skumulowanaSzansa += kategoria.szansa;
                 if (roll <= skumulowanaSzansa) {
-                    // Wylosowano ten tier - losujemy z niego jedną losową postać
                     const losowyIndeks = Math.floor(Math.random() * kategoria.postaci.length);
                     return {
                         postac: kategoria.postaci[losowyIndeks],
@@ -322,7 +360,6 @@
                     };
                 }
             }
-            // Zabezpieczenie (fallback), jeśli np. ze względu na float przeskoczy – daje Zwykłą
             const domyslna = bazaPostaci[bazaPostaci.length - 1];
             return { postac: domyslna.postaci[0], klasa: domyslna.klasa, nazwa: domyslna.nazwa };
         }
@@ -343,10 +380,8 @@
             wynik.innerText = "1...";
             await czekaj(800);
             
-            // Losujemy!
             const drop = wylosujDrop();
             
-            // Dodajemy postać do ekwipunku (lub zwiększamy jej ilość)
             if (ekwipunek[drop.postac]) {
                 ekwipunek[drop.postac]++;
             } else {
@@ -355,14 +390,63 @@
             zapiszEkwipunek();
             generujKatalog();
             
-            // Zapisujemy, żeby nie losować drugi raz dziś
             localStorage.setItem('dataLosowania', pobierzDzisiejszaDate());
             localStorage.setItem('wynikLosowania', drop.postac);
             localStorage.setItem('wynikKlasa', drop.klasa);
             localStorage.setItem('wynikTier', drop.nazwa);
             
-            // Pokazujemy ładny, pokolorowany wynik z animacją tieru
             pokazGotowyWynik(drop.postac, drop.klasa, drop.nazwa);
+        }
+
+        // Pomocnicza do wymiany: zlicza ile przedmiotów z danego tieru gracz ma
+        function policzZasobyKategorii(kategoria) {
+            let suma = 0;
+            kategoria.postaci.forEach(p => {
+                if(ekwipunek[p]) suma += ekwipunek[p];
+            });
+            return suma;
+        }
+
+        // Główna funkcja Systemu Wymiany
+        function dokonajWymiany(indexZrodlowy) {
+            let katZrodlowa = bazaPostaci[indexZrodlowy];
+            let katDocelowa = bazaPostaci[indexZrodlowy - 1]; // Poziom wyżej (niższy index to lepsza kategoria)
+            
+            let zasoby = policzZasobyKategorii(katZrodlowa);
+            if(zasoby < 5) return; // Zabezpieczenie przed błędem
+            
+            let doUsuniecia = 5;
+            
+            // Etap 1: W pierwszej kolejności usuwamy duplikaty (chronimy pojedyncze karty)
+            for (let p of katZrodlowa.postaci) {
+                while (ekwipunek[p] > 1 && doUsuniecia > 0) {
+                    ekwipunek[p]--;
+                    doUsuniecia--;
+                }
+            }
+            // Etap 2: Jeśli mimo pobrania duplikatów wciąż brakuje, pobieramy to co zostało
+            if (doUsuniecia > 0) {
+                for (let p of katZrodlowa.postaci) {
+                    while (ekwipunek[p] > 0 && doUsuniecia > 0) {
+                        ekwipunek[p]--;
+                        doUsuniecia--;
+                    }
+                }
+            }
+            
+            // Sprzątanie pustych kart (żeby z powrotem widniały jako "Zablokowana" w katalogu)
+            for (let p of katZrodlowa.postaci) {
+                if (ekwipunek[p] === 0) delete ekwipunek[p];
+            }
+
+            // Losowanie i dodawanie nowej karty z wyższej klasy
+            let nowaPostac = katDocelowa.postaci[Math.floor(Math.random() * katDocelowa.postaci.length)];
+            ekwipunek[nowaPostac] = (ekwipunek[nowaPostac] || 0) + 1;
+            
+            zapiszEkwipunek();
+            generujKatalog(); // Odśwież widok
+            
+            alert(`🎉 KONTRAKT UDANY!\n\nPrzekazano: 5x [${katZrodlowa.nazwa}]\n\nWylosowano nowy, wyższy tier:\n⭐ ${nowaPostac} [${katDocelowa.nazwa}]`);
         }
 
         function pokazUkryjKatalog() {
@@ -373,6 +457,8 @@
         function generujKatalog() {
             const lista = document.getElementById('katalog-lista');
             const statystyki = document.getElementById('katalog-statystyki');
+            const sekcjaWymiany = document.getElementById('wymiana-sekcja');
+            
             lista.innerHTML = "";
             
             let zdobyteUnikalne = Object.keys(ekwipunek).length;
@@ -380,24 +466,49 @@
             
             statystyki.innerText = `Odkryte postaci: ${zdobyteUnikalne} / ${wszystkieUnikalne}`;
 
-            // Tworzymy każdą kategorię osobno
+            // --- GENEROWANIE SYSTEMU WYMIANY ---
+            sekcjaWymiany.innerHTML = '<div class="wymiana-tytul">🔄 Kontrakty (Wymiana 5 ➔ 1)</div>';
+            
+            for(let i = 5; i >= 1; i--) { // Od Zwykłej [5] do Legendarnej [1]
+                let katZrodlowa = bazaPostaci[i];
+                let katDocelowa = bazaPostaci[i-1];
+                let posiadaneSztuki = policzZasobyKategorii(katZrodlowa);
+                
+                let rzad = document.createElement('div');
+                rzad.className = 'wymiana-rzad';
+                
+                let info = document.createElement('span');
+                info.innerHTML = `5x <span class="${katZrodlowa.klasa}">${katZrodlowa.nazwa}</span> (Masz: ${posiadaneSztuki})`;
+                
+                let przycisk = document.createElement('button');
+                przycisk.className = 'wymiana-btn';
+                przycisk.innerHTML = `Wymień na <span style="font-weight:900;" class="${katDocelowa.klasa}">${katDocelowa.nazwa}</span>`;
+                
+                if(posiadaneSztuki >= 5) {
+                    przycisk.onclick = () => dokonajWymiany(i);
+                } else {
+                    przycisk.disabled = true;
+                }
+                
+                rzad.appendChild(info);
+                rzad.appendChild(przycisk);
+                sekcjaWymiany.appendChild(rzad);
+            }
+
+            // --- GENEROWANIE LISTY POSTACI ---
             bazaPostaci.forEach(kategoria => {
-                // Tytuł kategorii (np. Legendarne)
                 const naglowek = document.createElement('div');
                 naglowek.className = `kategoria-tytul ${kategoria.klasa}`;
-                naglowek.innerText = `${kategoria.nazwa} (Szansa: ${kategoria.szansa}%)`;
+                naglowek.innerText = `${kategoria.nazwa} (Szansa na drop: ${kategoria.szansa}%)`;
                 lista.appendChild(naglowek);
 
-                // Postaci w kategorii
                 kategoria.postaci.forEach((postac, indeks) => {
                     const el = document.createElement('div');
                     
                     if (ekwipunek[postac]) {
-                        // ODBLOKOWANA KARTA
                         el.className = `postac ${kategoria.klasa}`;
                         el.innerHTML = `<span>${indeks + 1}. ${postac}</span> <span class="ilosc">x${ekwipunek[postac]}</span>`;
                     } else {
-                        // ZABLOKOWANA KARTA
                         el.className = "postac zablokowana";
                         el.innerHTML = `<span>${indeks + 1}. ??? (Nieodkryta)</span> <span class="ilosc">x0</span>`;
                     }

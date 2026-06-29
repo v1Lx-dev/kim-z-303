@@ -85,12 +85,12 @@
             transition: opacity 0.3s ease;
         }
 
-        /* --- RULETKA (NOWA SEKCJA) --- */
+        /* --- RULETKA (ZMIENIONA) --- */
         #ruletka-kontener {
             display: none;
             width: 100%;
             max-width: 600px;
-            height: 120px; /* Wysokość na ok. 3 elementy */
+            height: 120px; 
             overflow: hidden;
             position: relative;
             background-color: #1a252f;
@@ -105,7 +105,7 @@
             left: 0;
             width: 100%;
             height: 40px;
-            margin-top: -20px; /* Środek */
+            margin-top: -20px; 
             border-top: 2px solid #e74c3c;
             border-bottom: 2px solid #e74c3c;
             background: rgba(231, 76, 60, 0.15);
@@ -123,16 +123,11 @@
         }
         .ruletka-item {
             height: 40px;
-            line-height: 40px;
-            font-size: 20px;
-            text-align: center;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            padding: 0 10px;
+            box-sizing: border-box;
+            border-bottom: 2px solid #2c3e50; /* Odstęp między blokami koloru */
         }
 
-        /* --- KOLORY RZADKOŚCI --- */
+        /* --- KOLORY RZADKOŚCI TEKSTU --- */
         .mityczna {
             background: linear-gradient(270deg, #ff00cc, #3333ff, #ff00cc);
             background-size: 200% 200%;
@@ -154,6 +149,18 @@
             color: #7f8c8d !important; font-style: italic; background: none !important;
             -webkit-text-fill-color: #7f8c8d !important; text-shadow: none !important; font-weight: normal;
         }
+
+        /* --- TŁA DLA PASKÓW RULETKI --- */
+        .bg-mityczna {
+            background: linear-gradient(270deg, #ff00cc, #3333ff, #ff00cc);
+            background-size: 200% 200%;
+            animation: fadeEffect 3s ease infinite;
+        }
+        .bg-legendarna { background-color: #f1c40f; }
+        .bg-epicka { background-color: #9b59b6; }
+        .bg-rzadka { background-color: #3498db; }
+        .bg-niepospolita { background-color: #2ecc71; }
+        .bg-zwykla { background-color: #bdc3c7; } /* Lekko ciemniejszy szary żeby odcinał się od tła */
 
         /* Sekcja katalogu */
         #katalog-kontener {
@@ -302,7 +309,7 @@
             
             przycisk.disabled = true; przycisk.innerText = "Już dziś losowałeś! Wróć jutro.";
             wynik.className = klasaCSS; wynik.innerText = postac;
-            wynik.style.display = "block"; // Upewniamy się, że wynik wraca po animacji ruletki
+            wynik.style.display = "block"; 
             
             if(nazwaTieru) {
                 tier.innerText = `[ Rzadkość: ${nazwaTieru} ]`; tier.className = klasaCSS; tier.style.opacity = 1;
@@ -333,57 +340,46 @@
             przycisk.disabled = true; 
             wynik.style.display = "none"; 
             tier.style.opacity = 0;
-            ruletkaKontener.style.display = "block"; // Pokazujemy ruletkę
+            ruletkaKontener.style.display = "block"; 
             
             // 1. Wylosowanie właściwego dropu
             const drop = wylosujDrop();
             
-            // 2. Budowanie paska losowania (45 elementów żeby długo się kręciło)
+            // 2. Budowanie znacznie dłuższej taśmy dla 20-sekundowej animacji
             pasek.style.transition = "none";
             pasek.style.transform = "translateY(0)";
             pasek.innerHTML = "";
             
-            const iloscElementow = 45;
-            const docelowyIndeks = 40; // Zwycięska postać zatrzyma się na tym indeksie
+            const iloscElementow = 220; // Więcej klocków, żeby na początku szybko śmigały
+            const docelowyIndeks = 210; // Zatrzymuje się pod sam koniec
             
             for(let i = 0; i < iloscElementow; i++) {
                 let div = document.createElement('div');
                 div.className = 'ruletka-item';
                 
-                let daneItemu;
-                if(i === docelowyIndeks) {
-                    // Wrzucamy nasz właściwy wynik
-                    daneItemu = drop;
-                } else {
-                    // Losujemy inne postacie na tło maszyny losującej
-                    let losowyTier = bazaPostaci[Math.floor(Math.random() * bazaPostaci.length)];
-                    let losowaPostac = losowyTier.postaci[Math.floor(Math.random() * losowyTier.postaci.length)];
-                    daneItemu = { postac: losowaPostac, klasa: losowyTier.klasa };
-                }
+                let daneItemu = (i === docelowyIndeks) ? drop : wylosujDrop();
                 
-                div.innerText = daneItemu.postac;
-                div.classList.add(daneItemu.klasa);
+                // Dodajemy tylko klasę z prefiksem 'bg-', bez wpisywania tekstu do środka
+                div.classList.add('bg-' + daneItemu.klasa);
                 pasek.appendChild(div);
             }
             
             // 3. Rozpoczęcie animacji (wymuszenie reflow dla CSS)
             void pasek.offsetWidth;
             
-            // Matematyka: Wysokość elementu to 40px. Środek kontenera zaczyna się na 40px (ze 120px całej ramki).
-            // Musimy przesunąć pasek tak, by wylosowany item wskoczył w środek.
             const przesuniecie = -(docelowyIndeks * 40 - 40);
             
-            // Płynna animacja zwalniająca na końcu
-            pasek.style.transition = "transform 4s cubic-bezier(0.1, 0.85, 0.1, 1)";
+            // Bardzo długa animacja zwalniająca (20 sekund)
+            pasek.style.transition = "transform 20s cubic-bezier(0.1, 0.85, 0.1, 1)";
             pasek.style.transform = `translateY(${przesuniecie}px)`;
             
-            // Czekamy aż animacja się skończy + pół sekundy dla efektu
-            await czekaj(4500);
+            // Czekamy 20.5 sekundy (20 sekund animacji + pół sekundy dla efektu budowania napięcia)
+            await czekaj(20500);
             
-            // Ukrywamy ruletkę i pokazujemy gotowy złoty tekst
+            // Ukrywamy ruletkę i pokazujemy gotowy tekst z wynikiem
             ruletkaKontener.style.display = "none";
             
-            // Zapis do EQ
+            // Zapis do Ekwipunku
             ekwipunek[drop.postac] = (ekwipunek[drop.postac] || 0) + 1;
             zapiszEkwipunek(); generujKatalog();
             

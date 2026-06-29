@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kim z dywizjonu jesteś?</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            padding: 40px 20px;
+            box-sizing: border-box;
+            background-color: #2c3e50;
+            color: #ecf0f1;
+        }
+        button.glowny {
+            padding: 20px 40px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 6px 10px rgba(0,0,0,0.3);
+            transition: background-color 0.2s, transform 0.1s;
+            margin-top: 2vh;
+        }
+        button.glowny:hover:not(:disabled) {
+            background-color: #c0392b;
+        }
+        button.glowny:active:not(:disabled) {
+            transform: translateY(2px);
+            box-shadow: 0 3px 5px rgba(0,0,0,0.3);
+        }
+        button.glowny:disabled {
+            background-color: #7f8c8d;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        
+        button.katalog-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.2s;
+        }
+        button.katalog-btn:hover {
+            background-color: #2980b9;
+        }
+
+        #wynik-kontener {
+            margin-top: 40px;
+            min-height: 50px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #wynik {
+            font-size: 34px;
+            font-weight: bold;
+            padding: 0 20px;
+            transition: opacity 0.3s ease;
+        }
+
+        #wylosowany-tier {
+            font-size: 16px;
+            margin-top: 5px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .odliczanie {
+            color: #ecf0f1 !important;
+            font-size: 40px !important;
+            background: none !important;
+            -webkit-text-fill-color: #ecf0f1 !important;
+            text-shadow: none !important;
+        }
+
+        /* --- KOLORY RZADKOŚCI --- */
+        .mityczna {
+            background: linear-gradient(270deg, #ff00cc, #3333ff, #ff00cc);
+            background-size: 200% 200%;
+            animation: fadeEffect 3s ease infinite;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 900;
+        }
+        @keyframes fadeEffect { 
+            0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} 
+        }
+
+        .legendarna {
+            color: #f1c40f; /* Złoty */
+            text-shadow: 0 0 8px rgba(241,196,15,0.5);
+            font-weight: 900;
+        }
+        .epicka {
+            color: #9b59b6; /* Fioletowy */
+            font-weight: bold;
+        }
+        .rzadka {
+            color: #3498db; /* Niebieski */
+            font-weight: bold;
+        }
+        .niepospolita {
+            color: #2ecc71; /* Zielony */
+            font-weight: bold;
+        }
+        .zwykla {
+            color: #ecf0f1; /* Biały/Szary */
+        }
+
+        /* Klasa zablokowanej karty (nadpisuje kolory) */
+        .zablokowana {
+            color: #7f8c8d !important;
+            font-style: italic;
+            background: none !important;
+            -webkit-text-fill-color: #7f8c8d !important;
+            text-shadow: none !important;
+            font-weight: normal;
+        }
+
+        /* Sekcja katalogu */
+        #katalog-kontener {
+            display: none;
+            width: 100%;
+            max-width: 700px;
+            margin-top: 30px;
+            background-color: #34495e;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            margin-bottom: 50px;
+        }
+        #katalog-statystyki {
+            text-align: center;
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #bdc3c7;
+        }
+        .kategoria-tytul {
+            margin-top: 20px;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #2c3e50;
+            padding-bottom: 5px;
+            font-size: 20px;
+        }
+        .postac {
+            padding: 8px 10px;
+            font-size: 16px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .ilosc {
+            color: #ecf0f1;
+            font-size: 14px;
+            background: rgba(0,0,0,0.2);
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <button id="przycisk" class="glowny" onclick="losuj()">Jakim mieszkańcem osiedla Dywizjonu 303 jesteś dziś?</button>
+    
+    <div id="wynik-kontener">
+        <div id="wynik"></div>
+        <div id="wylosowany-tier"></div>
+    </div>
+    
+    <button class="katalog-btn" onclick="pokazUkryjKatalog()">📖 Pokaż katalog postaci</button>
+
+    <div id="katalog-kontener">
+        <div id="katalog-statystyki"></div>
+        <div id="katalog-lista"></div>
+    </div>
+
+    <script>
+        // Baza z tierami i odpowiednimi szansami
+        const bazaPostaci = [
+            {
+                nazwa: "Mityczna", szansa: 0.5, klasa: "mityczna",
+                postaci: [
+                    "prof. PK Jakub Klupa", "Klupa doktor matematyki"
+                ]
+            },
+            {
+                nazwa: "Legendarna", szansa: 2.0, klasa: "legendarna",
+                postaci: [
+                    "Jamnik na psychotropach", "Lodowy Bronek", "Bestia z dywizjonu"
+                ]
+            },
+            {
+                nazwa: "Epicka", szansa: 7.5, klasa: "epicka",
+                postaci: [
+                    "Bronek z pocztówką z Tomaszowa Lubelskiego", "Klupa pałujący strajkujących górników kopalni \"Wujek\"",
+                    "Julka z jamnikiem", "Bronek pobity przez psychofankę", "Zmora senna Klupy", "Donald Klump", "Vladimir Klupin"
+                ]
+            },
+            {
+                nazwa: "Rzadka", szansa: 15.0, klasa: "rzadka",
+                postaci: [
+                    "Klupa bohater UPA", "Bronek w lateksie", "Klupa pacyfikujący strajk stoczniowców", "TW Jakub K. ps. Bolek",
+                    "Benjamin Klupanjahu", "Osama Bin Klupen", "Bronek z Ciechocinka", "Henryk Kluppen - milicja kielecka", "Klupa w Banja Luka"
+                ]
+            },
+            {
+                nazwa: "Niepospolita", szansa: 30.0, klasa: "niepospolita",
+                postaci: [
+                    "Klupa zdrajca ojczyzny", "Bronek z jabłkami", "Klupa głosuję na Adriana nanana na na!", "Klupa na zjeździe narkotykowym",
+                    "Losowa kurewka Klupy z klubu studio", "Klupa aktywista antify", "Klupa niebinarny", "Klupa von der Leyen",
+                    "Bronek kościelny", "Jamnik w stroju pszczółki Mai", "Klupa monter klimatyzacji", "Klupa z podłogi frytek kupa (4:04)",
+                    "Klupa zamachowiec", "Klupa Ostatnie Pokolenie", "Kluppe der Bösewicht"
+                ]
+            },
+            {
+                nazwa: "Zwykła", szansa: 45.0, klasa: "zwykla",
+                postaci: [
+                    "Klupa nierób", "Klupa wieczny student", "Klupa instruktor jazdy", "Klupa bolszewik", "Klupa na kacu po nocy w klubie studio",
+                    "Klupa przetyrany", "Klupa nieszczery", "Klupa wróg publiczny", "Klupa posikany", "Klupa przebodźcowany", "Klupa kłamca",
+                    "Klupa upadliniec", "Klupa oszust", "Klupa sprzedawczyk", "Klupa konfident", "Klupa eco-friendly", "Klupa kolega Olgierda",
+                    "Klupa zwolennik Mercosur", "Klupa ćpun", "Klupa kaucyjny", "Klupa brudny", "Klupa dawca (motocyklista)", "Klupa z kryminału",
+                    "Klupa z tatuażykiem", "Klupa z kryształem", "Klupa taksówkarz ukraińców", "Klupa walący z dychy (10 hrywien)",
+                    "Klupa ugotowany", "Klupa lewak", "Klupa weganin", "Klupa ZERO (bez cukru)"
+                ]
+            }
+        ];
+
+        let ekwipunek = {}; // Format: { "Nazwa postaci": 2 }
+        
+        // Funkcja bezpiecznie pobierająca dane, która NIE KASUJE starego katalogu (tzw. migracja)
+        function zaladujEkwipunek() {
+            const zapis = localStorage.getItem('odblokowanePostaci');
+            if (zapis) {
+                const zdekodowane = JSON.parse(zapis);
+                // Jeśli dane to stara tablica (Array) ze starymi "dropami" (np. ["Bronek z jabłkami", ...])
+                if (Array.isArray(zdekodowane)) {
+                    zdekodowane.forEach(postac => {
+                        ekwipunek[postac] = 1; // Dajemy im 1 sztukę za stary drop
+                    });
+                    zapiszEkwipunek(); // Aktualizujemy w pamięci do nowego, słownikowego formatu
+                } else {
+                    ekwipunek = zdekodowane; // Pobieramy nowy, poprawny format
+                }
+            }
+        }
+
+        function zapiszEkwipunek() {
+            localStorage.setItem('odblokowanePostaci', JSON.stringify(ekwipunek));
+        }
+
+        function czekaj(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function pobierzDzisiejszaDate() {
+            return new Date().toLocaleDateString('pl-PL');
+        }
+
+        window.onload = function() {
+            zaladujEkwipunek();
+            generujKatalog();
+
+            const dzisiaj = pobierzDzisiejszaDate();
+            if (localStorage.getItem('dataLosowania') === dzisiaj) {
+                const wylosowanaKlasa = localStorage.getItem('wynikKlasa');
+                const wylosowanaNazwa = localStorage.getItem('wynikTier');
+                pokazGotowyWynik(localStorage.getItem('wynikLosowania'), wylosowanaKlasa, wylosowanaNazwa);
+            }
+        };
+
+        function pokazGotowyWynik(postac, klasaCSS, nazwaTieru) {
+            const przycisk = document.getElementById('przycisk');
+            const wynik = document.getElementById('wynik');
+            const tier = document.getElementById('wylosowany-tier');
+            
+            przycisk.disabled = true;
+            przycisk.innerText = "Już dziś losowałeś! Wróć jutro.";
+            
+            wynik.className = klasaCSS;
+            wynik.innerText = postac;
+            
+            if(nazwaTieru) {
+                tier.innerText = `[ Rzadkość: ${nazwaTieru} ]`;
+                tier.className = klasaCSS;
+                tier.style.opacity = 1;
+            }
+        }
+
+        // Algorytm losujący postać na podstawie ustalonych procentowych szans
+        function wylosujDrop() {
+            const roll = Math.random() * 100; // Liczba od 0 do 100
+            let skumulowanaSzansa = 0;
+
+            for (let kategoria of bazaPostaci) {
+                skumulowanaSzansa += kategoria.szansa;
+                if (roll <= skumulowanaSzansa) {
+                    // Wylosowano ten tier - losujemy z niego jedną losową postać
+                    const losowyIndeks = Math.floor(Math.random() * kategoria.postaci.length);
+                    return {
+                        postac: kategoria.postaci[losowyIndeks],
+                        klasa: kategoria.klasa,
+                        nazwa: kategoria.nazwa
+                    };
+                }
+            }
+            // Zabezpieczenie (fallback), jeśli np. ze względu na float przeskoczy – daje Zwykłą
+            const domyslna = bazaPostaci[bazaPostaci.length - 1];
+            return { postac: domyslna.postaci[0], klasa: domyslna.klasa, nazwa: domyslna.nazwa };
+        }
+
+        async function losuj() {
+            const przycisk = document.getElementById('przycisk');
+            const wynik = document.getElementById('wynik');
+            const tier = document.getElementById('wylosowany-tier');
+            
+            przycisk.disabled = true;
+            wynik.className = "odliczanie";
+            tier.style.opacity = 0;
+            
+            wynik.innerText = "3...";
+            await czekaj(800);
+            wynik.innerText = "2...";
+            await czekaj(800);
+            wynik.innerText = "1...";
+            await czekaj(800);
+            
+            // Losujemy!
+            const drop = wylosujDrop();
+            
+            // Dodajemy postać do ekwipunku (lub zwiększamy jej ilość)
+            if (ekwipunek[drop.postac]) {
+                ekwipunek[drop.postac]++;
+            } else {
+                ekwipunek[drop.postac] = 1;
+            }
+            zapiszEkwipunek();
+            generujKatalog();
+            
+            // Zapisujemy, żeby nie losować drugi raz dziś
+            localStorage.setItem('dataLosowania', pobierzDzisiejszaDate());
+            localStorage.setItem('wynikLosowania', drop.postac);
+            localStorage.setItem('wynikKlasa', drop.klasa);
+            localStorage.setItem('wynikTier', drop.nazwa);
+            
+            // Pokazujemy ładny, pokolorowany wynik z animacją tieru
+            pokazGotowyWynik(drop.postac, drop.klasa, drop.nazwa);
+        }
+
+        function pokazUkryjKatalog() {
+            const kontener = document.getElementById('katalog-kontener');
+            kontener.style.display = (kontener.style.display === "none" || kontener.style.display === "") ? "block" : "none";
+        }
+
+        function generujKatalog() {
+            const lista = document.getElementById('katalog-lista');
+            const statystyki = document.getElementById('katalog-statystyki');
+            lista.innerHTML = "";
+            
+            let zdobyteUnikalne = Object.keys(ekwipunek).length;
+            let wszystkieUnikalne = bazaPostaci.reduce((suma, kategoria) => suma + kategoria.postaci.length, 0);
+            
+            statystyki.innerText = `Odkryte postaci: ${zdobyteUnikalne} / ${wszystkieUnikalne}`;
+
+            // Tworzymy każdą kategorię osobno
+            bazaPostaci.forEach(kategoria => {
+                // Tytuł kategorii (np. Legendarne)
+                const naglowek = document.createElement('div');
+                naglowek.className = `kategoria-tytul ${kategoria.klasa}`;
+                naglowek.innerText = `${kategoria.nazwa} (Szansa: ${kategoria.szansa}%)`;
+                lista.appendChild(naglowek);
+
+                // Postaci w kategorii
+                kategoria.postaci.forEach((postac, indeks) => {
+                    const el = document.createElement('div');
+                    
+                    if (ekwipunek[postac]) {
+                        // ODBLOKOWANA KARTA
+                        el.className = `postac ${kategoria.klasa}`;
+                        el.innerHTML = `<span>${indeks + 1}. ${postac}</span> <span class="ilosc">x${ekwipunek[postac]}</span>`;
+                    } else {
+                        // ZABLOKOWANA KARTA
+                        el.className = "postac zablokowana";
+                        el.innerHTML = `<span>${indeks + 1}. ??? (Nieodkryta)</span> <span class="ilosc">x0</span>`;
+                    }
+                    
+                    lista.appendChild(el);
+                });
+            });
+        }
+    </script>
+
+</body>
+</html>

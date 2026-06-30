@@ -42,7 +42,24 @@
             max-width: 600px;
         }
 
-        /* --- PRZYCISKI --- */
+        /* --- PALE KODÓW PROMOCYJNYCH --- */
+        .panel-kodow {
+            display: flex; gap: 10px; width: 100%; max-width: 600px; 
+            background-color: #1a252f; padding: 15px; border-radius: 10px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5); box-sizing: border-box;
+            margin-bottom: 5px;
+        }
+        .input-kod {
+            flex: 1; padding: 10px; font-size: 16px; border: 2px solid #34495e;
+            border-radius: 5px; background-color: #2c3e50; color: white;
+        }
+        .btn-kod {
+            background-color: #8e44ad; color: white; border: none; padding: 10px 20px;
+            font-size: 16px; font-weight: bold; border-radius: 5px; cursor: pointer; transition: 0.2s;
+        }
+        .btn-kod:hover { background-color: #9b59b6; }
+
+        /* --- PRZYCISKI GŁÓWNE --- */
         button { font-family: inherit; }
         button.btn-losuj {
             padding: 20px 40px; font-size: 20px; font-weight: bold; cursor: pointer;
@@ -76,17 +93,12 @@
         .kasyno-tytul { color: #e74c3c; font-size: 24px; font-weight: bold; margin-bottom: 10px; }
         .kasyno-opis { color: #bdc3c7; font-size: 14px; margin-bottom: 15px; }
 
-        /* NOWA SEKCJA STAWKI */
         .kasyno-stawka {
             margin-bottom: 20px; padding: 15px; background: rgba(0,0,0,0.2);
             border-radius: 8px; border: 1px solid #34495e;
         }
-        .kasyno-stawka label {
-            display: block; margin-bottom: 10px; font-weight: bold; color: #f1c40f;
-        }
-        .stawka-kontrolki {
-            display: flex; justify-content: center; gap: 10px;
-        }
+        .kasyno-stawka label { display: block; margin-bottom: 10px; font-weight: bold; color: #f1c40f; }
+        .stawka-kontrolki { display: flex; justify-content: center; gap: 10px; }
         #input-stawka {
             width: 100px; padding: 10px; font-size: 18px; border-radius: 5px; font-weight: bold;
             border: 2px solid #34495e; background-color: #2c3e50; color: white; text-align: center;
@@ -108,9 +120,7 @@
         .bg-czarny { background-color: #2c3e50; border: 2px solid #7f8c8d; }
         .bg-zielony { background-color: #27ae60; }
 
-        .btn-wroc {
-            background-color: #7f8c8d; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px;
-        }
+        .btn-wroc { background-color: #7f8c8d; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px; }
 
         /* RULETKA KASYNA (KOLORY) */
         #ruletka-kasyno {
@@ -122,15 +132,13 @@
             position: absolute; left: 50%; top: 0; height: 100%; width: 4px;
             background-color: #f1c40f; z-index: 10; margin-left: -2px; box-shadow: 0 0 10px #f1c40f;
         }
-        #rk-pasek {
-            position: absolute; top: 0; left: 0; height: 100%; display: flex; flex-direction: row;
-        }
+        #rk-pasek { position: absolute; top: 0; left: 0; height: 100%; display: flex; flex-direction: row; }
         .rk-item {
             width: 80px; height: 100%; box-sizing: border-box; border-right: 1px solid rgba(0,0,0,0.5);
             display: flex; align-items: center; justify-content: center; font-weight: bold; color: rgba(255,255,255,0.3); font-size: 24px;
         }
 
-        /* --- MODAL WYNIKU KASYNA --- */
+        /* --- MODAL WYNIKU --- */
         #modal-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.8); z-index: 100; align-items: center; justify-content: center;
@@ -152,9 +160,7 @@
         .modal-btn-smutek { background-color: #7f8c8d; }
 
         /* --- WYNIK LOSOWANIA POSTACI I RULETKA --- */
-        #wynik-kontener {
-            margin-top: 20px; text-align: center; display: flex; flex-direction: column; align-items: center; width: 100%;
-        }
+        #wynik-kontener { margin-top: 20px; text-align: center; display: flex; flex-direction: column; align-items: center; width: 100%; }
         #wynik { font-size: 34px; font-weight: bold; padding: 0 20px; transition: 0.3s; }
         #wylosowany-tier { font-size: 16px; margin-top: 5px; text-transform: uppercase; letter-spacing: 2px; opacity: 0; }
         
@@ -169,7 +175,7 @@
         #rp-pasek { position: absolute; top: 0; left: 0; width: 100%; display: flex; flex-direction: column; }
         .rp-item { height: 40px; box-sizing: border-box; border-bottom: 2px solid #2c3e50; }
 
-        /* --- KOLORY RZADKOŚCI TEKSTU i TŁA --- */
+        /* --- KOLORY RZADKOŚCI --- */
         .mityczna, .bg-mityczna { background: linear-gradient(270deg, #ff00cc, #3333ff, #ff00cc); background-size: 200% 200%; animation: fadeEffect 3s ease infinite; }
         .mityczna { -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; }
         @keyframes fadeEffect { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
@@ -212,11 +218,18 @@
 
     <div id="pulpit-talonow">🎟️ TWOJE TALONY: <span id="licznik-wartosc">0</span></div>
 
+    <!-- PANEL KODÓW -->
+    <div class="panel-kodow">
+        <input type="text" id="input-kod" class="input-kod" placeholder="Wpisz kod promocyjny...">
+        <button class="btn-kod" onclick="uzyjKodu()">Odbierz</button>
+    </div>
+
     <div class="panel-glowny" id="panel-glowny">
         <button id="btn-losuj" class="btn-losuj" onclick="losujPostac()">🎲 Losuj Postać (Koszt: 1 Talon)</button>
         <button id="btn-kasyno" class="btn-kasyno" onclick="otworzKasyno()">🎰 Zagraj w Ruletkę Kasyno (Zaryzykuj Talony)</button>
     </div>
 
+    <!-- PANEL KASYNA -->
     <div id="panel-kasyna">
         <div class="kasyno-tytul">KASYNO DYWIZJONU</div>
         <div class="kasyno-opis">Zwycięstwo podwaja Twoją stawkę (lub x14 na zielonym). Porażka zabiera obstawione talony. Wybierz stawkę i kolor!</div>
@@ -243,6 +256,7 @@
         <button class="btn-wroc" id="btn-wroc" onclick="zamknijKasyno()">🔙 Wróć do losowania kart</button>
     </div>
 
+    <!-- PANEL LOSOWANIA POSTACI -->
     <div id="wynik-kontener">
         <div id="ruletka-postaci">
             <div id="rp-kursor"></div>
@@ -254,6 +268,7 @@
     
     <button class="katalog-btn" onclick="pokazUkryjKatalog()">📖 Pokaż katalog postaci i kontrakty</button>
 
+    <!-- KATALOG -->
     <div id="katalog-kontener">
         <div id="katalog-statystyki"></div>
         <div id="katalog-lista"></div>
@@ -271,12 +286,20 @@
         </div>
     </div>
 
+    <!-- OKIENKO WYNIKU KASYNA -->
     <div id="modal-overlay">
-        <div class="modal-box" id="modal-zawartosc">
-            </div>
+        <div class="modal-box" id="modal-zawartosc"></div>
     </div>
 
     <script>
+        // --- BAZA KODÓW PROMOCYJNYCH ---
+        // Klucze zawsze wpisuj WIELKIMI literami. Wartość to ilość dodanych talonów.
+        const darmoweKody = {
+            "JANPODRZUTEK": 1
+            // "KODSTARTOWY": 5, 
+            // "SWIETA2026": 3 
+        };
+
         const bazaPostaci = [
             { nazwa: "Mityczna", szansa: 0.5, klasa: "mityczna", postaci: ["prof. PK Jakub Klupa", "Klupa doktor matematyki"] },
             { nazwa: "Legendarna", szansa: 2.0, klasa: "legendarna", postaci: ["Jamnik na psychotropach", "Lodowy Bronek", "Bestia z dywizjonu", "Ruben Nersisyan"] },
@@ -332,6 +355,36 @@
             }
         }
 
+        // --- SYSTEM KODÓW PROMOCYJNYCH ---
+        function uzyjKodu() {
+            const input = document.getElementById('input-kod');
+            const wpisanyKod = input.value.trim().toUpperCase();
+            
+            if (!wpisanyKod) return;
+
+            let uzyteKody = JSON.parse(localStorage.getItem('uzyteKody')) || [];
+
+            if (uzyteKody.includes(wpisanyKod)) {
+                alert("❌ Ten kod został już przez Ciebie wykorzystany!");
+                return;
+            }
+
+            if (darmoweKody.hasOwnProperty(wpisanyKod)) {
+                const nagroda = darmoweKody[wpisanyKod];
+                talony += nagroda;
+                zapiszTalony();
+                
+                uzyteKody.push(wpisanyKod);
+                localStorage.setItem('uzyteKody', JSON.stringify(uzyteKody));
+                
+                odswiezUI();
+                input.value = "";
+                alert(`🎉 Pomyślnie zrealizowano kod! Otrzymujesz ${nagroda} Talon(ów)!`);
+            } else {
+                alert("❌ Nieprawidłowy lub nieistniejący kod promocyjny.");
+            }
+        }
+
         // --- SYSTEM KASYNA (RULETKA) ---
         function otworzKasyno() {
             document.getElementById('panel-glowny').style.display = 'none';
@@ -341,15 +394,12 @@
             document.getElementById('kasyno-stawka-kontener').style.display = 'block';
             document.getElementById('btn-wroc').style.display = 'inline-block';
             
-            // Konfiguracja inputu
             const inputStawka = document.getElementById('input-stawka');
             inputStawka.max = talony;
             inputStawka.value = 1;
         }
 
-        function ustawMaxStawke() {
-            document.getElementById('input-stawka').value = talony;
-        }
+        function ustawMaxStawke() { document.getElementById('input-stawka').value = talony; }
 
         function zamknijKasyno() {
             document.getElementById('panel-kasyna').style.display = 'none';
@@ -365,14 +415,12 @@
                 return;
             }
             
-            // Zablokuj środki
             talony -= stawka;
             zapiszTalony();
             odswiezUI();
 
-            // UI podczas kręcenia
             document.getElementById('btn-wroc').style.display = 'none';
-            document.getElementById('kasyno-stawka-kontener').style.display = 'none'; // Chowa wybór stawki
+            document.getElementById('kasyno-stawka-kontener').style.display = 'none';
             const kontrolki = document.querySelectorAll('.btn-obstaw');
             kontrolki.forEach(b => b.disabled = true);
             
@@ -380,13 +428,11 @@
             const pasek = document.getElementById('rk-pasek');
             ruletka.style.display = 'block';
             
-            // Losowanie wyniku (0-36). 0=zielony, 1-18=czerwony, 19-36=czarny
             const num = Math.floor(Math.random() * 37);
             let wygranyKolor = 'zielony';
             if(num >= 1 && num <= 18) wygranyKolor = 'czerwony';
             if(num >= 19 && num <= 36) wygranyKolor = 'czarny';
 
-            // Budowanie poziomego paska ruletki
             pasek.style.transition = "none";
             pasek.style.transform = "translateX(0)";
             pasek.innerHTML = "";
@@ -424,7 +470,6 @@
 
             await czekaj(6500);
 
-            // ROZLICZENIE
             if(wybranyKolor === wygranyKolor) {
                 let mnoznik = (wygranyKolor === 'zielony') ? 14 : 2;
                 let wygrana = stawka * mnoznik;
@@ -471,12 +516,11 @@
             document.getElementById('ruletka-kasyno').style.display = 'none';
             
             if(akcja === 'kasyno') {
-                otworzKasyno(); // Resetuje UI kasyna, pokazuje input stawki itp.
+                otworzKasyno();
             } else if(akcja === 'losowanie' || akcja === 'koniec') {
                 zamknijKasyno();
             }
         }
-
 
         // --- SYSTEM LOSOWANIA POSTACI ---
         function wylosujDrop() {

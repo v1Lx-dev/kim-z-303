@@ -74,7 +74,28 @@
             text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.5); margin-bottom: 20px;
         }
         .kasyno-tytul { color: #e74c3c; font-size: 24px; font-weight: bold; margin-bottom: 10px; }
-        .kasyno-opis { color: #bdc3c7; font-size: 14px; margin-bottom: 20px; }
+        .kasyno-opis { color: #bdc3c7; font-size: 14px; margin-bottom: 15px; }
+
+        /* NOWA SEKCJA STAWKI */
+        .kasyno-stawka {
+            margin-bottom: 20px; padding: 15px; background: rgba(0,0,0,0.2);
+            border-radius: 8px; border: 1px solid #34495e;
+        }
+        .kasyno-stawka label {
+            display: block; margin-bottom: 10px; font-weight: bold; color: #f1c40f;
+        }
+        .stawka-kontrolki {
+            display: flex; justify-content: center; gap: 10px;
+        }
+        #input-stawka {
+            width: 100px; padding: 10px; font-size: 18px; border-radius: 5px; font-weight: bold;
+            border: 2px solid #34495e; background-color: #2c3e50; color: white; text-align: center;
+        }
+        .btn-max {
+            background-color: #f39c12; color: white; border: none; padding: 10px 15px;
+            border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.2s;
+        }
+        .btn-max:hover { background-color: #e67e22; }
         
         .kasyno-przyciski { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 15px;}
         .btn-obstaw {
@@ -159,7 +180,7 @@
         .zwykla { color: #ecf0f1; } .bg-zwykla { background-color: #bdc3c7; }
         .zablokowana { color: #7f8c8d !important; font-style: italic; background: none !important; -webkit-text-fill-color: #7f8c8d !important; font-weight: normal; }
 
-        /* --- KATALOG & KONTRAKTY (skrócone style żeby kod był czystszy) --- */
+        /* --- KATALOG & KONTRAKTY --- */
         #katalog-kontener { display: none; width: 100%; max-width: 700px; margin-top: 30px; background-color: #34495e; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
         #katalog-statystyki { text-align: center; font-weight: bold; font-size: 18px; margin-bottom: 20px; color: #bdc3c7; }
         .kategoria-tytul { margin-top: 20px; margin-bottom: 10px; border-bottom: 2px solid #2c3e50; padding-bottom: 5px; font-size: 20px; }
@@ -198,8 +219,16 @@
 
     <div id="panel-kasyna">
         <div class="kasyno-tytul">KASYNO DYWIZJONU</div>
-        <div class="kasyno-opis">Obstawiasz <b>WSZYSTKIE</b> swoje obecne talony. Zwycięstwo podwaja stawkę (lub x14 na zielonym). Porażka czyści Twoje konto!</div>
+        <div class="kasyno-opis">Zwycięstwo podwaja Twoją stawkę (lub x14 na zielonym). Porażka zabiera obstawione talony. Wybierz stawkę i kolor!</div>
         
+        <div class="kasyno-stawka" id="kasyno-stawka-kontener">
+            <label for="input-stawka">Ile talonów obstawiasz?</label>
+            <div class="stawka-kontrolki">
+                <input type="number" id="input-stawka" min="1" value="1">
+                <button class="btn-max" onclick="ustawMaxStawke()">MAX</button>
+            </div>
+        </div>
+
         <div class="kasyno-przyciski" id="kasyno-kontrolki">
             <button class="btn-obstaw bg-czerwony" onclick="grajWKasyne('czerwony')">🔴 Czerwone (x2)</button>
             <button class="btn-obstaw bg-czarny" onclick="grajWKasyne('czarny')">⚫ Czarne (x2)</button>
@@ -267,13 +296,12 @@
         window.onload = function() {
             zaladujEkwipunek();
             
-            // System codziennych talonów
             talony = parseInt(localStorage.getItem('talony')) || 0;
             const dzisiaj = pobierzDzisiejszaDate();
             const ostatnieLogowanie = localStorage.getItem('ostatnieLogowanie');
             
             if (ostatnieLogowanie !== dzisiaj) {
-                talony += 1; // +1 talon za nowy dzień
+                talony += 1; 
                 localStorage.setItem('ostatnieLogowanie', dzisiaj);
                 zapiszTalony();
             }
@@ -282,9 +310,7 @@
             generujKatalog();
         };
 
-        function zapiszTalony() {
-            localStorage.setItem('talony', talony);
-        }
+        function zapiszTalony() { localStorage.setItem('talony', talony); }
 
         function odswiezUI() {
             document.getElementById('licznik-wartosc').innerText = talony;
@@ -300,7 +326,7 @@
                 obiektyKasyna.forEach(b => b.disabled = false);
             } else {
                 btnLosuj.disabled = true;
-                btnLosuj.innerText = "💀 Brak talonów. Do zobaczenia jutro!";
+                btnLosuj.innerText = "💀 Brak talonów. Wracaj jutro!";
                 btnKasyno.disabled = true;
                 obiektyKasyna.forEach(b => b.disabled = true);
             }
@@ -312,7 +338,17 @@
             document.getElementById('wynik-kontener').style.display = 'none';
             document.getElementById('panel-kasyna').style.display = 'block';
             document.getElementById('ruletka-kasyno').style.display = 'none';
+            document.getElementById('kasyno-stawka-kontener').style.display = 'block';
             document.getElementById('btn-wroc').style.display = 'inline-block';
+            
+            // Konfiguracja inputu
+            const inputStawka = document.getElementById('input-stawka');
+            inputStawka.max = talony;
+            inputStawka.value = 1;
+        }
+
+        function ustawMaxStawke() {
+            document.getElementById('input-stawka').value = talony;
         }
 
         function zamknijKasyno() {
@@ -322,15 +358,21 @@
         }
 
         async function grajWKasyne(wybranyKolor) {
-            if (talony <= 0) return;
+            let stawka = parseInt(document.getElementById('input-stawka').value);
+
+            if (isNaN(stawka) || stawka < 1 || stawka > talony) {
+                alert("Nieprawidłowa stawka! Upewnij się, że masz wystarczającą liczbę talonów.");
+                return;
+            }
             
-            const postawioneTalony = talony;
-            talony = 0; // Zerujemy na czas kręcenia
+            // Zablokuj środki
+            talony -= stawka;
             zapiszTalony();
             odswiezUI();
 
             // UI podczas kręcenia
             document.getElementById('btn-wroc').style.display = 'none';
+            document.getElementById('kasyno-stawka-kontener').style.display = 'none'; // Chowa wybór stawki
             const kontrolki = document.querySelectorAll('.btn-obstaw');
             kontrolki.forEach(b => b.disabled = true);
             
@@ -373,11 +415,9 @@
 
             void pasek.offsetWidth;
             
-            // Przesunięcie (szerokość elementu 80px, środek ruletki zależy od ekranu - przy 600px to 300px)
-            // Kursor jest idealnie na środku kontenera. 
             const kontenerSzer = ruletka.offsetWidth;
             const srodek = kontenerSzer / 2;
-            const przesuniecie = -(docelowyIndeks * 80) + srodek - 40; // -40 by zcentrować sam box 80px
+            const przesuniecie = -(docelowyIndeks * 80) + srodek - 40;
 
             pasek.style.transition = "transform 6s cubic-bezier(0.1, 0.85, 0.1, 1)";
             pasek.style.transform = `translateX(${przesuniecie}px)`;
@@ -387,33 +427,39 @@
             // ROZLICZENIE
             if(wybranyKolor === wygranyKolor) {
                 let mnoznik = (wygranyKolor === 'zielony') ? 14 : 2;
-                let wygrana = postawioneTalony * mnoznik;
+                let wygrana = stawka * mnoznik;
                 talony += wygrana;
                 zapiszTalony();
-                pokazModal(true, wygrana);
+                pokazModal(true, wygrana, stawka);
             } else {
-                pokazModal(false, 0);
+                pokazModal(false, 0, stawka);
             }
             odswiezUI();
         }
 
-        function pokazModal(wygrana, kwota) {
+        function pokazModal(wygrana, kwotaWygranej, postawiono) {
             const overlay = document.getElementById('modal-overlay');
             const box = document.getElementById('modal-zawartosc');
             
             if(wygrana) {
                 box.innerHTML = `
                     <h2 style="color:#2ecc71;">🎉 WYGRANA!</h2>
-                    <p>Brawo! Twój stan konta to teraz: <b>${kwota} Talonów</b>.</p>
+                    <p>Brawo! Zgarniasz <b>${kwotaWygranej} Talonów</b>! Twój nowy stan konta to: <b>${talony}</b>.</p>
                     <button class="modal-btn modal-btn-graj" onclick="zamknijModal('kasyno')">🎰 Gram dalej w Kasynie</button>
                     <button class="modal-btn modal-btn-losuj" onclick="zamknijModal('losowanie')">🎲 Idę losować Postacie</button>
                 `;
                 box.style.borderColor = '#2ecc71';
             } else {
+                let tytul = talony > 0 ? "📉 PRZEGRANA" : "💀 BANKRUT";
+                let opis = talony > 0 
+                    ? `Niestety. Przegrałeś <b>${postawiono}</b> Talonów. Zostało Ci jeszcze <b>${talony}</b>.` 
+                    : `Przegrałeś wszystko. Zostało Ci 0 Talonów. Do zobaczenia jutro!`;
+
                 box.innerHTML = `
-                    <h2 style="color:#e74c3c;">💀 BANKRUT</h2>
-                    <p>Przegrałeś wszystkie dzisiejsze talony. Do zobaczenia jutro...</p>
-                    <button class="modal-btn modal-btn-smutek" onclick="zamknijModal('koniec')">Zakończ z honorem</button>
+                    <h2 style="color:#e74c3c;">${tytul}</h2>
+                    <p>${opis}</p>
+                    ${talony > 0 ? `<button class="modal-btn modal-btn-graj" onclick="zamknijModal('kasyno')">🎰 Spróbuj ponownie</button>` : ''}
+                    <button class="modal-btn modal-btn-smutek" onclick="zamknijModal('koniec')">Zakończ</button>
                 `;
                 box.style.borderColor = '#e74c3c';
             }
@@ -423,17 +469,16 @@
         function zamknijModal(akcja) {
             document.getElementById('modal-overlay').style.display = 'none';
             document.getElementById('ruletka-kasyno').style.display = 'none';
-            document.getElementById('btn-wroc').style.display = 'inline-block';
             
             if(akcja === 'kasyno') {
-                // Zostajemy w kasynie
+                otworzKasyno(); // Resetuje UI kasyna, pokazuje input stawki itp.
             } else if(akcja === 'losowanie' || akcja === 'koniec') {
                 zamknijKasyno();
             }
         }
 
 
-        // --- SYSTEM LOSOWANIA POSTACI (Z POPRZEDNIEJ WERSJI) ---
+        // --- SYSTEM LOSOWANIA POSTACI ---
         function wylosujDrop() {
             const roll = Math.random() * 100;
             let sk = 0;
@@ -451,7 +496,6 @@
         async function losujPostac() {
             if(talony < 1) return;
             
-            // Pobranie opłaty
             talony -= 1;
             zapiszTalony();
             odswiezUI();
@@ -500,10 +544,10 @@
             wynik.className = drop.klasa; wynik.innerText = drop.postac; wynik.style.display = "block"; 
             tier.innerText = `[ Rzadkość: ${drop.nazwa} ]`; tier.className = drop.klasa; tier.style.opacity = 1;
 
-            odswiezUI(); // Przywraca przyciski jeśli gracz ma więcej talonów
+            odswiezUI(); 
         }
 
-        // --- KATALOG & KONTRAKTY (BEZ ZMIAN W LOGICE) ---
+        // --- KATALOG & KONTRAKTY ---
         function zaladujEkwipunek() {
             const zapis = localStorage.getItem('odblokowanePostaci');
             if (zapis) {
